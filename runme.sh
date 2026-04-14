@@ -8,6 +8,8 @@ BENCHES=(
   "bench_exp"
   "bench_expf"
   "bench_expq"
+  "bench_expf_mpfr"
+  "bench_exp_mpfr64"
   "bench_exp_mpfr"
   "bench_softfloat"
   "bench_intelm"

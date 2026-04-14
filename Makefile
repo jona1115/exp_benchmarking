@@ -18,7 +18,7 @@ MKL_CC ?= icx
 MKL_CFLAGS ?= -qmkl
 MKL_LIBS ?=
 
-BENCHES := bench_exp bench_expf bench_expq bench_exp_mpfr bench_softfloat bench_intelm
+BENCHES := bench_exp bench_expf bench_expq bench_expf_mpfr bench_exp_mpfr64 bench_exp_mpfr bench_softfloat bench_intelm
 BINARIES := $(addprefix $(BIN_DIR)/,$(BENCHES))
 RUN_TARGETS := $(addprefix run-,$(BENCHES))
 
@@ -106,6 +106,12 @@ $(BIN_DIR)/bench_expq: bench_expq.c
 $(BIN_DIR)/bench_exp_mpfr: bench_exp_mpfr.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) bench_exp_mpfr.c -o $(BIN_DIR)/bench_exp_mpfr -lmpfr -lgmp,bench_exp_mpfr)
 
+$(BIN_DIR)/bench_expf_mpfr: bench_expf_mpfr.c
+>$(call TRY_BUILD,$(CC) $(CFLAGS) bench_expf_mpfr.c -o $(BIN_DIR)/bench_expf_mpfr -lmpfr -lgmp,bench_expf_mpfr)
+
+$(BIN_DIR)/bench_exp_mpfr64: bench_exp_mpfr64.c
+>$(call TRY_BUILD,$(CC) $(CFLAGS) bench_exp_mpfr64.c -o $(BIN_DIR)/bench_exp_mpfr64 -lmpfr -lgmp,bench_exp_mpfr64)
+
 $(BIN_DIR)/bench_softfloat: bench_softfloat.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) -std=c11 -DSOFTFLOAT_FAST_INT64 $(SOFTFLOAT_INC) bench_softfloat.c $(SOFTFLOAT_LIB) -lquadmath -o $(BIN_DIR)/bench_softfloat,bench_softfloat)
 
@@ -145,6 +151,12 @@ run-bench_expq:
 
 run-bench_exp_mpfr:
 >$(call TRY_RUN,bench_exp_mpfr)
+
+run-bench_expf_mpfr:
+>$(call TRY_RUN,bench_expf_mpfr)
+
+run-bench_exp_mpfr64:
+>$(call TRY_RUN,bench_exp_mpfr64)
 
 run-bench_softfloat:
 >$(call TRY_RUN,bench_softfloat)
