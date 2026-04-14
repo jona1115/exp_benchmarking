@@ -8,6 +8,9 @@ BENCHES=(
   "bench_exp"
   "bench_expq"
   "bench_expf"
+  "bench_cuda_expf"
+  "bench_cuda_exp"
+  "bench_cuda_expq"
   "bench_expf_mpfr"
   "bench_exp_mpfr64"
   "bench_exp_mpfr"
@@ -67,17 +70,34 @@ write_info_row() {
 
 benchmark_datatype() {
   case "$1" in
-    bench_expf|bench_expf_mpfr|bench_softfloat32)
+    bench_expf|bench_expf_mpfr|bench_softfloat32|bench_cuda_expf)
       printf 'binary32'
       ;;
-    bench_exp|bench_exp_mpfr64|bench_softfloat64|bench_intelm)
+    bench_exp|bench_exp_mpfr64|bench_softfloat64|bench_intelm|bench_cuda_exp)
       printf 'binary64'
       ;;
-    bench_expq|bench_exp_mpfr|bench_softfloat128)
+    bench_expq|bench_exp_mpfr|bench_softfloat128|bench_cuda_expq)
       printf 'binary128'
       ;;
     *)
       printf 'unknown'
+      ;;
+  esac
+}
+
+benchmark_default_note() {
+  case "$1" in
+    bench_cuda_expf)
+      printf 'CUDA launch: 1 block x 4 threads'
+      ;;
+    bench_cuda_exp)
+      printf 'CUDA launch: 1 block x 2 threads'
+      ;;
+    bench_cuda_expq)
+      printf 'CUDA launch: 1 block x 1 thread; binary128 emulated with double-double'
+      ;;
+    *)
+      printf '-'
       ;;
   esac
 }
@@ -295,6 +315,73 @@ detect_mkl_version() {
   printf 'not detected'
 }
 
+detect_cuda_toolkit_version() {
+  local nvcc_path=""
+  local version_line=""
+
+  if ! command -v nvcc >/dev/null 2>&1; then
+    printf 'not detected'
+    return 0
+  fi
+
+  nvcc_path="$(command -v nvcc 2>/dev/null || true)"
+  version_line="$(nvcc --version 2>/dev/null | awk -F', ' '/release /{print $2", "$3; exit}' || true)"
+  if [[ -z "$version_line" ]]; then
+    version_line="$(nvcc --version 2>/dev/null | tail -n1 || true)"
+  fi
+
+  if [[ -n "$nvcc_path" ]]; then
+    printf '%s (%s)' "$version_line" "$nvcc_path"
+  else
+    printf '%s' "$version_line"
+  fi
+}
+
+detect_cuda_driver_gpu_info() {
+  local smi_probe=""
+  local driver=""
+  local first_gpu=""
+  local gpu_count=""
+  local cuda_runtime=""
+
+  if ! command -v nvidia-smi >/dev/null 2>&1; then
+    printf 'not detected'
+    return 0
+  fi
+
+  smi_probe="$(nvidia-smi -L 2>&1 || true)"
+  if [[ "$smi_probe" == *"NVIDIA-SMI has failed"* || "$smi_probe" == *"couldn't communicate with the NVIDIA driver"* ]]; then
+    printf 'unavailable (%s)' "$(printf '%s' "$smi_probe" | head -n1)"
+    return 0
+  fi
+
+  driver="$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -n1 || true)"
+  first_gpu="$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -n1 || true)"
+  gpu_count="$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | wc -l | tr -d '[:space:]' || true)"
+  cuda_runtime="$(nvidia-smi 2>/dev/null | awk -F'CUDA Version: ' '/CUDA Version:/{split($2,a," "); print a[1]; exit}' || true)"
+
+  if [[ -z "$driver" && -z "$first_gpu" ]]; then
+    printf 'nvidia-smi present, but no GPU information available'
+    return 0
+  fi
+
+  if [[ -z "$gpu_count" ]]; then
+    gpu_count="unknown"
+  fi
+  if [[ -z "$driver" ]]; then
+    driver="unknown"
+  fi
+  if [[ -z "$cuda_runtime" ]]; then
+    cuda_runtime="unknown"
+  fi
+  if [[ -z "$first_gpu" ]]; then
+    first_gpu="unknown"
+  fi
+
+  printf 'driver %s, CUDA runtime %s, GPUs %s (first: %s)' \
+    "$driver" "$cuda_runtime" "$gpu_count" "$first_gpu"
+}
+
 detect_softfloat_commit() {
   local commit=""
   if commit="$(git -C "$ROOT_DIR/berkeley-softfloat-3" rev-parse --short=12 HEAD 2>/dev/null || true)"; then
@@ -405,6 +492,25 @@ extract_build_reason() {
   printf '%s' "$reason"
 }
 
+extract_run_reason() {
+  local run_log="$1"
+  local reason=""
+
+  if [[ -f "$run_log" ]]; then
+    reason="$(grep -E -m1 'CUDA error|No CUDA device|error:|failed|exception|terminated' "$run_log" || true)"
+    if [[ -z "$reason" ]]; then
+      reason="$(tail -n 1 "$run_log" 2>/dev/null || true)"
+    fi
+  fi
+
+  if [[ -z "$reason" ]]; then
+    reason="runtime failed or metrics missing"
+  fi
+
+  reason="${reason//$'\r'/}"
+  printf '%s' "$reason"
+}
+
 echo "[runme] building and running benchmarks"
 make run
 
@@ -415,6 +521,8 @@ MPFR_VERSION_INFO="$(detect_mpfr_version)"
 GMP_VERSION_INFO="$(detect_gmp_version)"
 SOFTFLOAT_COMMIT_INFO="$(detect_softfloat_commit)"
 MKL_VERSION_INFO="$(detect_mkl_version)"
+CUDA_TOOLKIT_INFO="$(detect_cuda_toolkit_version)"
+CUDA_DRIVER_GPU_INFO="$(detect_cuda_driver_gpu_info)"
 
 write_csv_row "benchmark" "datatype" "function" "total_calls" "total_time_ns" "ns_per_call" "calls_per_second" "status" "notes" > "$RESULTS_CSV"
 
@@ -440,6 +548,8 @@ write_csv_row "benchmark" "datatype" "function" "total_calls" "total_time_ns" "n
   write_info_row "GMP" "$GMP_VERSION_INFO"
   write_info_row "SoftFloat commit" "$SOFTFLOAT_COMMIT_INFO"
   write_info_row "Intel MKL" "$MKL_VERSION_INFO"
+  write_info_row "CUDA toolkit" "$CUDA_TOOLKIT_INFO"
+  write_info_row "CUDA driver/GPU" "$CUDA_DRIVER_GPU_INFO"
   echo
 
   echo "## Benchmark Results"
@@ -459,8 +569,8 @@ write_csv_row "benchmark" "datatype" "function" "total_calls" "total_time_ns" "n
     ns_per_call="-"
     calls_per_second="-"
     status="ok"
-    notes="-"
-    notes_md="-"
+    notes="$(benchmark_default_note "$bench")"
+    notes_md="$notes"
     datatype="$(benchmark_datatype "$bench")"
 
     if [[ ! -x "$bin" ]]; then
@@ -489,10 +599,11 @@ write_csv_row "benchmark" "datatype" "function" "total_calls" "total_time_ns" "n
 
       if [[ "$total_calls" == "-" || "$total_time_ns" == "-" || "$ns_per_call" == "-" || "$calls_per_second" == "-" ]]; then
         status="parse-warning"
-        notes="could not parse one or more metrics"
+        notes="$(extract_run_reason "$run_log")"
       fi
     fi
 
+    [[ -z "$notes" ]] && notes="-"
     write_csv_row "$bench" "$datatype" "$function_name" "$total_calls" "$total_time_ns" "$ns_per_call" "$calls_per_second" "$status" "$notes" >> "$RESULTS_CSV"
     notes_md="${notes//|/\\|}"
     printf '| `%s` | `%s` | `%s` | %s | %s | %s | %s | %s | %s |\n' \

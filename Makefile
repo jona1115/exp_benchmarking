@@ -17,8 +17,10 @@ ONEAPI_SETVARS ?= /opt/intel/oneapi/setvars.sh
 MKL_CC ?= icx
 MKL_CFLAGS ?= -qmkl
 MKL_LIBS ?=
+NVCC ?= nvcc
+NVCCFLAGS ?= -O3
 
-BENCHES := bench_exp bench_expq bench_expf bench_expf_mpfr bench_exp_mpfr64 bench_exp_mpfr bench_softfloat32 bench_softfloat64 bench_softfloat128 bench_intelm
+BENCHES := bench_exp bench_expq bench_expf bench_cuda_expf bench_cuda_exp bench_cuda_expq bench_expf_mpfr bench_exp_mpfr64 bench_exp_mpfr bench_softfloat32 bench_softfloat64 bench_softfloat128 bench_intelm
 BINARIES := $(addprefix $(BIN_DIR)/,$(BENCHES))
 RUN_TARGETS := $(addprefix run-,$(BENCHES))
 
@@ -40,6 +42,8 @@ help:
 >echo "  MKL_CC=icx"
 >echo "  MKL_CFLAGS='-I/path/to/mkl/include'"
 >echo "  MKL_LIBS='-L/path/to/mkl/lib -lmkl_rt -lpthread -lm -ldl'"
+>echo "  NVCC=nvcc"
+>echo "  NVCCFLAGS='-O3'"
 
 list:
 >for b in $(BENCHES); do \
@@ -103,6 +107,15 @@ $(BIN_DIR)/bench_expf: bench_expf.c
 $(BIN_DIR)/bench_expq: bench_expq.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) bench_expq.c -o $(BIN_DIR)/bench_expq -lquadmath,bench_expq)
 
+$(BIN_DIR)/bench_cuda_expf: bench_cuda_expf.cu
+>$(call TRY_BUILD,$(NVCC) $(NVCCFLAGS) bench_cuda_expf.cu -o $(BIN_DIR)/bench_cuda_expf,bench_cuda_expf)
+
+$(BIN_DIR)/bench_cuda_exp: bench_cuda_exp.cu
+>$(call TRY_BUILD,$(NVCC) $(NVCCFLAGS) bench_cuda_exp.cu -o $(BIN_DIR)/bench_cuda_exp,bench_cuda_exp)
+
+$(BIN_DIR)/bench_cuda_expq: bench_cuda_expq.cu
+>$(call TRY_BUILD,$(NVCC) $(NVCCFLAGS) bench_cuda_expq.cu -o $(BIN_DIR)/bench_cuda_expq,bench_cuda_expq)
+
 $(BIN_DIR)/bench_exp_mpfr: bench_exp_mpfr.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) bench_exp_mpfr.c -o $(BIN_DIR)/bench_exp_mpfr -lmpfr -lgmp,bench_exp_mpfr)
 
@@ -154,6 +167,15 @@ run-bench_expf:
 
 run-bench_expq:
 >$(call TRY_RUN,bench_expq)
+
+run-bench_cuda_expf:
+>$(call TRY_RUN,bench_cuda_expf)
+
+run-bench_cuda_exp:
+>$(call TRY_RUN,bench_cuda_exp)
+
+run-bench_cuda_expq:
+>$(call TRY_RUN,bench_cuda_expq)
 
 run-bench_exp_mpfr:
 >$(call TRY_RUN,bench_exp_mpfr)
