@@ -5,9 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
 BENCHES=(
+  "bench_exp"
   "bench_expq"
   "bench_expf"
-  "bench_expq"
   "bench_expf_mpfr"
   "bench_exp_mpfr64"
   "bench_exp_mpfr"
@@ -471,7 +471,7 @@ write_csv_row "benchmark" "datatype" "function" "total_calls" "total_time_ns" "n
       notes="run log missing"
     else
       total_calls="$(extract_eq_value "$run_log" '^total calls[[:space:]]*=')"
-      total_time_ns="$(extract_eq_value "$run_log" '^total time \(ns\)[[:space:]]*=')"
+      total_time_ns="$(extract_eq_value "$run_log" '^total time [(]ns[)][[:space:]]*=')"
 
       ns_pair="$(extract_ns_pair "$run_log")"
       if [[ -n "$ns_pair" ]]; then
