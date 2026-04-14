@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
 BENCHES=(
-  "bench_exp"
+  "bench_expq"
   "bench_expf"
   "bench_expq"
   "bench_expf_mpfr"
@@ -13,7 +13,7 @@ BENCHES=(
   "bench_exp_mpfr"
   "bench_softfloat32"
   "bench_softfloat64"
-  "bench_softfloat"
+  "bench_softfloat128"
   "bench_intelm"
 )
 

@@ -18,7 +18,7 @@ MKL_CC ?= icx
 MKL_CFLAGS ?= -qmkl
 MKL_LIBS ?=
 
-BENCHES := bench_exp bench_expf bench_expq bench_expf_mpfr bench_exp_mpfr64 bench_exp_mpfr bench_softfloat32 bench_softfloat64 bench_softfloat bench_intelm
+BENCHES := bench_expq bench_expf bench_expq bench_expf_mpfr bench_exp_mpfr64 bench_exp_mpfr bench_softfloat32 bench_softfloat64 bench_softfloat128 bench_intelm
 BINARIES := $(addprefix $(BIN_DIR)/,$(BENCHES))
 RUN_TARGETS := $(addprefix run-,$(BENCHES))
 

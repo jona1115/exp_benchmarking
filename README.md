@@ -8,4 +8,4 @@ Latest benchmark table: [results.md](results.md)
 
 ## Contribute
 1. Add your benchmark, recommended to prefix the file name with `bench_*`
-2. Add it into `runme.sh`'s `BENCHES` variable (top of the file).
+2. Add it into `runme.sh` and Makefile's `BENCHES` variable (top of both the files).
