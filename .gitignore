@@ -1,4 +1,2 @@
-/bench_*
-!/bench_*.c
-/pz_libm_*
-!/pz_libm_*.c
+build/
+.codex

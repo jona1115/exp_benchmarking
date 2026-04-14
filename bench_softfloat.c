@@ -1,6 +1,6 @@
 // To compile and run from /home/jona1115/libquadmathfun:
 /*
-gcc -O3 -march=native -std=c11 -DSOFTFLOAT_FAST_INT64 -I../github/SoftFloat-3e/build/Linux-x86_64-GCC -I../github/SoftFloat-3e/source/include bench_softfloat.c ../github/SoftFloat-3e/build/Linux-x86_64-GCC/softfloat.a -lquadmath -o bench_softfloat && ./bench_softfloat
+gcc -O3 -march=native -std=c11 -DSOFTFLOAT_FAST_INT64 -I./berkeley-softfloat-3/build/Linux-x86_64-GCC -I./berkeley-softfloat-3/source/include bench_softfloat.c ./berkeley-softfloat-3/build/Linux-x86_64-GCC/softfloat.a -lquadmath -o bench_softfloat && ./bench_softfloat
 */
 //
 // This benchmark uses a SoftFloat implementation of expq that follows the
@@ -21,8 +21,8 @@ gcc -O3 -march=native -std=c11 -DSOFTFLOAT_FAST_INT64 -I../github/SoftFloat-3e/b
 #include <string.h>
 #include <time.h>
 
-#include "../github/SoftFloat-3e/build/Linux-x86_64-GCC/platform.h"
-#include "../github/SoftFloat-3e/source/include/softfloat.h"
+#include "./berkeley-softfloat-3/build/Linux-x86_64-GCC/platform.h"
+#include "./berkeley-softfloat-3/source/include/softfloat.h"
 
 #ifndef N
 #define N 10000000
