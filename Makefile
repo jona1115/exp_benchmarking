@@ -13,8 +13,10 @@ SOFTFLOAT_BUILD_DIR := $(SOFTFLOAT_DIR)/build/Linux-x86_64-GCC
 SOFTFLOAT_LIB := $(SOFTFLOAT_BUILD_DIR)/softfloat.a
 SOFTFLOAT_INC := -I$(SOFTFLOAT_BUILD_DIR) -I$(SOFTFLOAT_DIR)/source/include
 
-MKL_CFLAGS ?=
-MKL_LIBS ?= -lmkl_rt -lpthread -lm -ldl
+ONEAPI_SETVARS ?= /opt/intel/oneapi/setvars.sh
+MKL_CC ?= icx
+MKL_CFLAGS ?= -qmkl
+MKL_LIBS ?=
 
 BENCHES := bench_exp bench_expf bench_expq bench_exp_mpfr bench_softfloat bench_intelm
 BINARIES := $(addprefix $(BIN_DIR)/,$(BENCHES))
@@ -34,6 +36,8 @@ help:
 >echo "Optional overrides:"
 >echo "  CC=clang"
 >echo "  CFLAGS='-O2 -march=native'"
+>echo "  ONEAPI_SETVARS=/opt/intel/oneapi/setvars.sh"
+>echo "  MKL_CC=icx"
 >echo "  MKL_CFLAGS='-I/path/to/mkl/include'"
 >echo "  MKL_LIBS='-L/path/to/mkl/lib -lmkl_rt -lpthread -lm -ldl'"
 
@@ -106,7 +110,27 @@ $(BIN_DIR)/bench_softfloat: bench_softfloat.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) -std=c11 -DSOFTFLOAT_FAST_INT64 $(SOFTFLOAT_INC) bench_softfloat.c $(SOFTFLOAT_LIB) -lquadmath -o $(BIN_DIR)/bench_softfloat,bench_softfloat)
 
 $(BIN_DIR)/bench_intelm: bench_intelm.c
->$(call TRY_BUILD,$(CC) $(CFLAGS) $(MKL_CFLAGS) bench_intelm.c -o $(BIN_DIR)/bench_intelm $(MKL_LIBS),bench_intelm)
+>@mkdir -p "$(BIN_DIR)" "$(BUILD_LOG_DIR)"
+>@set +e; \
+>log="$(BUILD_LOG_DIR)/bench_intelm.build.log"; \
+>echo "[build] bench_intelm"; \
+>if [ ! -f "$(ONEAPI_SETVARS)" ]; then \
+>  printf '%s\n' "setvars not found: $(ONEAPI_SETVARS)" > "$$log"; \
+>  echo "[warn] bench_intelm: $(ONEAPI_SETVARS) not found, skipping. See $$log"; \
+>  rm -f "$(BIN_DIR)/bench_intelm"; \
+>  exit 0; \
+>fi; \
+>cmd='source "$(ONEAPI_SETVARS)" >/dev/null 2>&1 && command -v "$(MKL_CC)" >/dev/null 2>&1 && "$(MKL_CC)" $(CFLAGS) $(MKL_CFLAGS) bench_intelm.c -o "$(BIN_DIR)/bench_intelm" $(MKL_LIBS)'; \
+>echo "$$cmd" > "$$log"; \
+>/usr/bin/env bash -lc "$$cmd" >> "$$log" 2>&1; \
+>rc=$$?; \
+>if [ $$rc -ne 0 ]; then \
+>  echo "[warn] bench_intelm: compile failed, skipping. See $$log"; \
+>  rm -f "$(BIN_DIR)/bench_intelm"; \
+>else \
+>  echo "[ok] bench_intelm: $(BIN_DIR)/bench_intelm"; \
+>fi; \
+>exit 0
 
 run: all $(RUN_TARGETS)
 
@@ -126,4 +150,27 @@ run-bench_softfloat:
 >$(call TRY_RUN,bench_softfloat)
 
 run-bench_intelm:
->$(call TRY_RUN,bench_intelm)
+>@mkdir -p "$(RUN_LOG_DIR)"
+>@set +e; \
+>bin="$(BIN_DIR)/bench_intelm"; \
+>out="$(RUN_LOG_DIR)/bench_intelm.txt"; \
+>if [ ! -x "$$bin" ]; then \
+>  echo "[warn] bench_intelm: not built, skipping run"; \
+>  rm -f "$$out"; \
+>  exit 0; \
+>fi; \
+>if [ ! -f "$(ONEAPI_SETVARS)" ]; then \
+>  echo "[warn] bench_intelm: $(ONEAPI_SETVARS) not found, skipping run"; \
+>  rm -f "$$out"; \
+>  exit 0; \
+>fi; \
+>echo "[run] bench_intelm"; \
+>cmd='source "$(ONEAPI_SETVARS)" >/dev/null 2>&1 && "$(BIN_DIR)/bench_intelm"'; \
+>/usr/bin/env bash -lc "$$cmd" > "$$out" 2>&1; \
+>rc=$$?; \
+>if [ $$rc -ne 0 ]; then \
+>  echo "[warn] bench_intelm: runtime failure (exit $$rc). See $$out"; \
+>else \
+>  echo "[ok] bench_intelm: wrote $$out"; \
+>fi; \
+>exit 0

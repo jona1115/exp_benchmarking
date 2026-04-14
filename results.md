@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Collected at (UTC) | 2026-04-14 02:57:36 UTC |
+| Collected at (UTC) | 2026-04-14 03:02:48 UTC |
 | OS | Ubuntu 22.04.5 LTS |
 | Kernel | Linux 6.8.0-94-generic |
 | Architecture | x86_64 |
@@ -20,9 +20,9 @@
 
 | Benchmark | Function | Total Calls | Total Time (ns) | ns / call | Calls / second | Status | Notes |
 |---|---|---:|---:|---:|---:|---|---|
-| `bench_exp` | `exp` | 10000000 | 51879780 | 5.188 | 192753323.164 | ok | - |
-| `bench_expf` | `expf` | 10000000 | 29517371 | 2.952 | 338783559.010 | ok | - |
-| `bench_expq` | `expq` | 10000000 | 7436894413 | 743.689 | 1344647.301 | ok | - |
-| `bench_exp_mpfr` | `mpfr_exp` | 1000000 | 1378354363 | 1378.354 | 725502.836 | ok | - |
-| `bench_softfloat` | `sf_expq` | 50000000 | 25893762061 | 517.875 | 1930966.998 | ok | - |
-| `bench_intelm` | `-` | - | - | - | - | skipped | bench_intelm.c:4:10: fatal error: mkl.h: No such file or directory |
+| `bench_exp` | `exp` | 10000000 | 50609188 | 5.061 | 197592579.434 | ok | - |
+| `bench_expf` | `expf` | 10000000 | 29249800 | 2.925 | 341882679.540 | ok | - |
+| `bench_expq` | `expq` | 10000000 | 7473299592 | 747.330 | 1338097.032 | ok | - |
+| `bench_exp_mpfr` | `mpfr_exp` | 1000000 | 1397893018 | 1397.893 | 715362.325 | ok | - |
+| `bench_softfloat` | `sf_expq` | 50000000 | 25696722902 | 513.934 | 1945773.404 | ok | - |
+| `bench_intelm` | `exp` | 10000000 | 8922550 | 0.892 | 1120755837.737 | ok | - |
