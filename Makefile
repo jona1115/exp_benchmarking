@@ -49,6 +49,7 @@ list:
 clean:
 >rm -rf build
 >rm -f results.md
+>rm -f results.csv
 
 define TRY_BUILD
 @mkdir -p "$(BIN_DIR)" "$(BUILD_LOG_DIR)"

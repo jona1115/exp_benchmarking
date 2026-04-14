@@ -1,4 +1,4 @@
-// To compile and run from /home/jona1115/libquadmathfun:
+// To compile and run:
 /*
 gcc -O3 -march=native -std=c11 -DSOFTFLOAT_FAST_INT64 -I./berkeley-softfloat-3/build/Linux-x86_64-GCC -I./berkeley-softfloat-3/source/include bench_softfloat.c ./berkeley-softfloat-3/build/Linux-x86_64-GCC/softfloat.a -lquadmath -o bench_softfloat && ./bench_softfloat
 */

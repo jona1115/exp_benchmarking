@@ -17,6 +17,7 @@ BIN_DIR="$ROOT_DIR/build/bin"
 BUILD_LOG_DIR="$ROOT_DIR/build/build_logs"
 RUN_LOG_DIR="$ROOT_DIR/build/run_logs"
 RESULTS_MD="$ROOT_DIR/results.md"
+RESULTS_CSV="$ROOT_DIR/results.csv"
 
 normalize_value() {
   local s="${1:-}"
@@ -34,6 +35,24 @@ md_escape() {
   s="$(normalize_value "${1:-}")"
   s="${s//|/\\|}"
   printf '%s' "$s"
+}
+
+csv_escape() {
+  local s="${1:-}"
+  s="${s//$'\r'/ }"
+  s="${s//$'\n'/ }"
+  s="${s//\"/\"\"}"
+  printf '"%s"' "$s"
+}
+
+write_csv_row() {
+  local fields=()
+  local field
+  for field in "$@"; do
+    fields+=("$(csv_escape "$field")")
+  done
+  local IFS=,
+  printf '%s\n' "${fields[*]}"
 }
 
 write_info_row() {
@@ -362,7 +381,6 @@ extract_build_reason() {
   fi
 
   reason="${reason//$'\r'/}"
-  reason="${reason//|/\\|}"
   printf '%s' "$reason"
 }
 
@@ -376,6 +394,8 @@ MPFR_VERSION_INFO="$(detect_mpfr_version)"
 GMP_VERSION_INFO="$(detect_gmp_version)"
 SOFTFLOAT_COMMIT_INFO="$(detect_softfloat_commit)"
 MKL_VERSION_INFO="$(detect_mkl_version)"
+
+write_csv_row "benchmark" "function" "total_calls" "total_time_ns" "ns_per_call" "calls_per_second" "status" "notes" > "$RESULTS_CSV"
 
 {
   echo "## System Information"
@@ -418,6 +438,7 @@ MKL_VERSION_INFO="$(detect_mkl_version)"
     calls_per_second="-"
     status="ok"
     notes="-"
+    notes_md="-"
 
     if [[ ! -x "$bin" ]]; then
       status="skipped"
@@ -449,10 +470,12 @@ MKL_VERSION_INFO="$(detect_mkl_version)"
       fi
     fi
 
-    notes="${notes//|/\\|}"
+    write_csv_row "$bench" "$function_name" "$total_calls" "$total_time_ns" "$ns_per_call" "$calls_per_second" "$status" "$notes" >> "$RESULTS_CSV"
+    notes_md="${notes//|/\\|}"
     printf '| `%s` | `%s` | %s | %s | %s | %s | %s | %s |\n' \
-      "$bench" "$function_name" "$total_calls" "$total_time_ns" "$ns_per_call" "$calls_per_second" "$status" "$notes"
+      "$bench" "$function_name" "$total_calls" "$total_time_ns" "$ns_per_call" "$calls_per_second" "$status" "$notes_md"
   done
 } > "$RESULTS_MD"
 
 echo "[runme] wrote $RESULTS_MD"
+echo "[runme] wrote $RESULTS_CSV"
