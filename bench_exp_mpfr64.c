@@ -14,7 +14,7 @@ gcc -O3 -march=native bench_exp_mpfr64.c -o bench_exp_mpfr64 -lmpfr -lgmp && ./b
 #endif
 
 #ifndef REPEATS
-#define REPEATS 10
+#define REPEATS 100
 #endif
 
 #ifndef PREC_BITS

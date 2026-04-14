@@ -25,11 +25,11 @@ gcc -O3 -march=native -std=c11 -DSOFTFLOAT_FAST_INT64 -I./berkeley-softfloat-3/b
 #include "./berkeley-softfloat-3/source/include/softfloat.h"
 
 #ifndef N
-#define N 10000000
+#define N 1000000
 #endif
 
 #ifndef REPEATS
-#define REPEATS 5
+#define REPEATS 10
 #endif
 
 #define ARG1_MIN (-89)

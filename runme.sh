@@ -11,6 +11,8 @@ BENCHES=(
   "bench_expf_mpfr"
   "bench_exp_mpfr64"
   "bench_exp_mpfr"
+  "bench_softfloat32"
+  "bench_softfloat64"
   "bench_softfloat"
   "bench_intelm"
 )
@@ -61,6 +63,23 @@ write_info_row() {
   local key="$1"
   local value="$2"
   printf '| %s | %s |\n' "$(md_escape "$key")" "$(md_escape "$value")"
+}
+
+benchmark_datatype() {
+  case "$1" in
+    bench_expf|bench_expf_mpfr|bench_softfloat32)
+      printf 'binary32'
+      ;;
+    bench_exp|bench_exp_mpfr64|bench_softfloat64|bench_intelm)
+      printf 'binary64'
+      ;;
+    bench_expq|bench_exp_mpfr|bench_softfloat)
+      printf 'binary128'
+      ;;
+    *)
+      printf 'unknown'
+      ;;
+  esac
 }
 
 package_version_for_path() {
@@ -397,7 +416,7 @@ GMP_VERSION_INFO="$(detect_gmp_version)"
 SOFTFLOAT_COMMIT_INFO="$(detect_softfloat_commit)"
 MKL_VERSION_INFO="$(detect_mkl_version)"
 
-write_csv_row "benchmark" "function" "total_calls" "total_time_ns" "ns_per_call" "calls_per_second" "status" "notes" > "$RESULTS_CSV"
+write_csv_row "benchmark" "datatype" "function" "total_calls" "total_time_ns" "ns_per_call" "calls_per_second" "status" "notes" > "$RESULTS_CSV"
 
 {
   echo "## System Information"
@@ -425,8 +444,8 @@ write_csv_row "benchmark" "function" "total_calls" "total_time_ns" "ns_per_call"
 
   echo "## Benchmark Results"
   echo
-  echo "| Benchmark | Function | Total Calls | Total Time (ns) | ns / call | Calls / second | Status | Notes |"
-  echo "|---|---|---:|---:|---:|---:|---|---|"
+  echo "| Benchmark | Data Type | Function | Total Calls | Total Time (ns) | ns / call | Calls / second | Status | Notes |"
+  echo "|---|---|---|---:|---:|---:|---:|---|---|"
 
   for bench in "${BENCHES[@]}"; do
     bin="$BIN_DIR/$bench"
@@ -434,6 +453,7 @@ write_csv_row "benchmark" "function" "total_calls" "total_time_ns" "ns_per_call"
     build_log="$BUILD_LOG_DIR/$bench.build.log"
 
     function_name="-"
+    datatype="unknown"
     total_calls="-"
     total_time_ns="-"
     ns_per_call="-"
@@ -441,6 +461,7 @@ write_csv_row "benchmark" "function" "total_calls" "total_time_ns" "ns_per_call"
     status="ok"
     notes="-"
     notes_md="-"
+    datatype="$(benchmark_datatype "$bench")"
 
     if [[ ! -x "$bin" ]]; then
       status="skipped"
@@ -472,10 +493,10 @@ write_csv_row "benchmark" "function" "total_calls" "total_time_ns" "ns_per_call"
       fi
     fi
 
-    write_csv_row "$bench" "$function_name" "$total_calls" "$total_time_ns" "$ns_per_call" "$calls_per_second" "$status" "$notes" >> "$RESULTS_CSV"
+    write_csv_row "$bench" "$datatype" "$function_name" "$total_calls" "$total_time_ns" "$ns_per_call" "$calls_per_second" "$status" "$notes" >> "$RESULTS_CSV"
     notes_md="${notes//|/\\|}"
-    printf '| `%s` | `%s` | %s | %s | %s | %s | %s | %s |\n' \
-      "$bench" "$function_name" "$total_calls" "$total_time_ns" "$ns_per_call" "$calls_per_second" "$status" "$notes_md"
+    printf '| `%s` | `%s` | `%s` | %s | %s | %s | %s | %s | %s |\n' \
+      "$bench" "$datatype" "$function_name" "$total_calls" "$total_time_ns" "$ns_per_call" "$calls_per_second" "$status" "$notes_md"
   done
 } > "$RESULTS_MD"
 

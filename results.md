@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Collected at (UTC) | 2026-04-14 03:08:59 UTC |
+| Collected at (UTC) | 2026-04-14 03:35:46 UTC |
 | OS | Ubuntu 22.04.5 LTS |
 | Kernel | Linux 6.8.0-94-generic |
 | Architecture | x86_64 |
@@ -18,13 +18,15 @@
 
 ## Benchmark Results
 
-| Benchmark | Function | Total Calls | Total Time (ns) | ns / call | Calls / second | Status | Notes |
-|---|---|---:|---:|---:|---:|---|---|
-| `bench_exp` | `exp` | 10000000 | 50845100 | 5.085 | 196675785.867 | ok | - |
-| `bench_expf` | `expf` | 10000000 | 30579115 | 3.058 | 327020582.512 | ok | - |
-| `bench_expq` | `expq` | 10000000 | 7523749322 | 752.375 | 1329124.559 | ok | - |
-| `bench_expf_mpfr` | `mpfr_expf` | 1000000 | 746289671 | 746.290 | 1339962.268 | ok | - |
-| `bench_exp_mpfr64` | `mpfr_exp64` | 1000000 | 912871882 | 912.872 | 1095443.972 | ok | - |
-| `bench_exp_mpfr` | `mpfr_exp` | 1000000 | 1396234641 | 1396.235 | 716211.997 | ok | - |
-| `bench_softfloat` | `sf_expq` | 50000000 | 26134595332 | 522.692 | 1913172.918 | ok | - |
-| `bench_intelm` | `exp` | 10000000 | 9700752 | 0.970 | 1030847917.770 | ok | - |
+| Benchmark | Data Type | Function | Total Calls | Total Time (ns) | ns / call | Calls / second | Status | Notes |
+|---|---|---|---:|---:|---:|---:|---|---|
+| `bench_exp` | `binary64` | `exp` | 10000000 | 49389426 | 4.939 | 202472488.747 | ok | - |
+| `bench_expf` | `binary32` | `expf` | 10000000 | 30521464 | 3.052 | 327638281.047 | ok | - |
+| `bench_expq` | `binary128` | `expq` | 10000000 | 7466364539 | 746.636 | 1339339.909 | ok | - |
+| `bench_expf_mpfr` | `binary32` | `mpfr_expf` | 10000000 | 7703947834 | 770.395 | 1298035.788 | ok | - |
+| `bench_exp_mpfr64` | `binary64` | `mpfr_exp64` | 10000000 | 9755381851 | 975.538 | 1025075.200 | ok | - |
+| `bench_exp_mpfr` | `binary128` | `mpfr_exp` | 10000000 | 13726895850 | 1372.690 | 728496.822 | ok | - |
+| `bench_softfloat32` | `binary32` | `sf_expf` | 10000000 | 1591050648 | 159.105 | 6285155.041 | ok | - |
+| `bench_softfloat64` | `binary64` | `sf_exp` | 10000000 | 2040843237 | 204.084 | 4899935.389 | ok | - |
+| `bench_softfloat` | `binary128` | `sf_expq` | 10000000 | 5145119615 | 514.512 | 1943589.411 | ok | - |
+| `bench_intelm` | `binary64` | `exp` | 10000000 | 9168021 | 0.917 | 1090747937.859 | ok | - |

@@ -14,7 +14,7 @@ gcc -O3 -march=native bench_exp_mpfr.c -o bench_exp_mpfr -lmpfr -lgmp && ./bench
 #endif
 
 #ifndef REPEATS
-#define REPEATS 10
+#define REPEATS 100
 #endif
 
 #ifndef PREC_BITS
@@ -75,6 +75,7 @@ int main(void) {
     double ns_per_call = (double)total_ns / calls;
     double evals_per_sec = 1e9 / ns_per_call;
 
+    printf("format           = binary128\n");
     printf("precision (bits) = %d\n", PREC_BITS);
     printf("total calls      = %.0f\n", calls);
     printf("total time (ns)  = %llu\n", (unsigned long long)total_ns);
