@@ -118,8 +118,8 @@ $(BIN_DIR)/bench_softfloat32: bench_softfloat32.c
 $(BIN_DIR)/bench_softfloat64: bench_softfloat64.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) -std=c11 -DSOFTFLOAT_FAST_INT64 $(SOFTFLOAT_INC) bench_softfloat64.c $(SOFTFLOAT_LIB) -lm -o $(BIN_DIR)/bench_softfloat64,bench_softfloat64)
 
-$(BIN_DIR)/bench_softfloat: bench_softfloat.c
->$(call TRY_BUILD,$(CC) $(CFLAGS) -std=c11 -DSOFTFLOAT_FAST_INT64 $(SOFTFLOAT_INC) bench_softfloat.c $(SOFTFLOAT_LIB) -lquadmath -o $(BIN_DIR)/bench_softfloat,bench_softfloat)
+$(BIN_DIR)/bench_softfloat128: bench_softfloat128.c
+>$(call TRY_BUILD,$(CC) $(CFLAGS) -std=c11 -DSOFTFLOAT_FAST_INT64 $(SOFTFLOAT_INC) bench_softfloat128.c $(SOFTFLOAT_LIB) -lquadmath -o $(BIN_DIR)/bench_softfloat128,bench_softfloat128)
 
 $(BIN_DIR)/bench_intelm: bench_intelm.c
 >@mkdir -p "$(BIN_DIR)" "$(BUILD_LOG_DIR)"
@@ -170,8 +170,8 @@ run-bench_softfloat32:
 run-bench_softfloat64:
 >$(call TRY_RUN,bench_softfloat64)
 
-run-bench_softfloat:
->$(call TRY_RUN,bench_softfloat)
+run-bench_softfloat128:
+>$(call TRY_RUN,bench_softfloat128)
 
 run-bench_intelm:
 >@mkdir -p "$(RUN_LOG_DIR)"

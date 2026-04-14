@@ -73,7 +73,7 @@ benchmark_datatype() {
     bench_exp|bench_exp_mpfr64|bench_softfloat64|bench_intelm)
       printf 'binary64'
       ;;
-    bench_expq|bench_exp_mpfr|bench_softfloat)
+    bench_expq|bench_exp_mpfr|bench_softfloat128)
       printf 'binary128'
       ;;
     *)
