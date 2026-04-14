@@ -6,8 +6,11 @@ cd "$ROOT_DIR"
 
 BENCHES=(
   "bench_exp"
+  "bench_coremath_exp"
   "bench_expq"
+  "bench_coremath_expq"
   "bench_expf"
+  "bench_coremath_expf"
   "bench_cuda_expf"
   "bench_cuda_exp"
   "bench_cuda_expq"
@@ -70,13 +73,13 @@ write_info_row() {
 
 benchmark_datatype() {
   case "$1" in
-    bench_expf|bench_expf_mpfr|bench_softfloat32|bench_cuda_expf)
+    bench_expf|bench_coremath_expf|bench_expf_mpfr|bench_softfloat32|bench_cuda_expf)
       printf 'binary32'
       ;;
-    bench_exp|bench_exp_mpfr64|bench_softfloat64|bench_intelm|bench_cuda_exp)
+    bench_exp|bench_coremath_exp|bench_exp_mpfr64|bench_softfloat64|bench_intelm|bench_cuda_exp)
       printf 'binary64'
       ;;
-    bench_expq|bench_exp_mpfr|bench_softfloat128|bench_cuda_expq)
+    bench_expq|bench_coremath_expq|bench_exp_mpfr|bench_softfloat128|bench_cuda_expq)
       printf 'binary128'
       ;;
     *)
@@ -87,6 +90,15 @@ benchmark_datatype() {
 
 benchmark_default_note() {
   case "$1" in
+    bench_coremath_expf)
+      printf 'CORE-MATH: cr_expf from core-math/src/binary32/exp/expf.c'
+      ;;
+    bench_coremath_exp)
+      printf 'CORE-MATH: cr_exp from core-math/src/binary64/exp/exp.c'
+      ;;
+    bench_coremath_expq)
+      printf 'CORE-MATH: cr_expq from core-math/src/binary128/exp/expq.c'
+      ;;
     bench_cuda_expf)
       printf 'CUDA launch: 1 block x 4 threads'
       ;;
@@ -512,7 +524,11 @@ extract_run_reason() {
 }
 
 echo "[runme] building and running benchmarks"
-make run
+MAKE_ARGS=()
+if command -v clang >/dev/null 2>&1; then
+  MAKE_ARGS+=("CORE_MATH_EXPQ_CC=clang")
+fi
+make run "${MAKE_ARGS[@]}"
 
 detect_system_info
 COLLECTED_AT_UTC="$(date -u +'%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || true)"

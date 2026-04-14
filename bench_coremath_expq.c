@@ -1,15 +1,19 @@
 /* To compile and run
-gcc -O3 -march=native bench_expq.c -o bench_expq -lquadmath && ./bench_expq
+gcc -O3 -march=native -fno-finite-math-only -frounding-math \
+  bench_coremath_expq.c core-math/src/binary128/exp/expq.c \
+  -o bench_coremath_expq -lquadmath -lm && ./bench_coremath_expq
 */
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <time.h>
 #include <quadmath.h>
 
 #ifndef N
 #define N 1000000
 #endif
+
+__float128 cr_expq(__float128);
 
 static inline uint64_t ns_now(void) {
     struct timespec ts;
@@ -31,7 +35,7 @@ int main(void) {
 
     // Warm-up
     for (int i = 0; i < N; i++) {
-        sum += expq(x[i]);
+        sum += cr_expq(x[i]);
     }
     sink = sum;
 
@@ -40,7 +44,7 @@ int main(void) {
 
     for (int r = 0; r < 10; r++) {
         for (int i = 0; i < N; i++) {
-            sum += expq(x[i]);
+            sum += cr_expq(x[i]);
         }
     }
 
@@ -54,8 +58,8 @@ int main(void) {
 
     printf("total calls      = %.0f\n", calls);
     printf("total time (ns)  = %llu\n", (unsigned long long)total_ns);
-    printf("ns / expq        = %.3f\n", ns_per_call);
-    printf("expq / second    = %.3f\n", evals_per_sec);
+    printf("ns / cr_expq     = %.3f\n", ns_per_call);
+    printf("cr_expq / second = %.3f\n", evals_per_sec);
 
     return 0;
 }

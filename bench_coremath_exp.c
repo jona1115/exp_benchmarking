@@ -1,15 +1,18 @@
 /* To compile and run
-gcc -O3 -march=native bench_expq.c -o bench_expq -lquadmath && ./bench_expq
+gcc -O3 -march=native -fno-finite-math-only -frounding-math \
+  bench_coremath_exp.c core-math/src/binary64/exp/exp.c \
+  -o bench_coremath_exp -lm && ./bench_coremath_exp
 */
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <time.h>
-#include <quadmath.h>
 
 #ifndef N
 #define N 1000000
 #endif
+
+double cr_exp(double);
 
 static inline uint64_t ns_now(void) {
     struct timespec ts;
@@ -17,30 +20,30 @@ static inline uint64_t ns_now(void) {
     return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
 }
 
-volatile __float128 sink;
+volatile double sink;
 
 int main(void) {
-    static __float128 x[N];
-    __float128 sum = 0.0Q;
+    static double x[N];
+    double sum = 0.0;
 
     // Pre-generate inputs so the benchmark is not just one repeated constant.
     // Keep values in a moderate range to avoid overflow/underflow dominating.
     for (int i = 0; i < N; i++) {
-        x[i] = -5.0Q + 10.0Q * ((__float128)i / (__float128)N);
+        x[i] = -5.0 + 10.0 * ((double)i / (double)N);
     }
 
     // Warm-up
     for (int i = 0; i < N; i++) {
-        sum += expq(x[i]);
+        sum += cr_exp(x[i]);
     }
     sink = sum;
 
-    sum = 0.0Q;
+    sum = 0.0;
     uint64_t t0 = ns_now();
 
     for (int r = 0; r < 10; r++) {
         for (int i = 0; i < N; i++) {
-            sum += expq(x[i]);
+            sum += cr_exp(x[i]);
         }
     }
 
@@ -54,8 +57,8 @@ int main(void) {
 
     printf("total calls      = %.0f\n", calls);
     printf("total time (ns)  = %llu\n", (unsigned long long)total_ns);
-    printf("ns / expq        = %.3f\n", ns_per_call);
-    printf("expq / second    = %.3f\n", evals_per_sec);
+    printf("ns / cr_exp      = %.3f\n", ns_per_call);
+    printf("cr_exp / second  = %.3f\n", evals_per_sec);
 
     return 0;
 }

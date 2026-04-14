@@ -3,6 +3,7 @@ SHELL := /usr/bin/env bash
 
 CC ?= gcc
 CFLAGS ?= -O3 -march=native
+GCC_FOR_QUADMATH ?= gcc
 
 BIN_DIR := build/bin
 BUILD_LOG_DIR := build/build_logs
@@ -20,7 +21,17 @@ MKL_LIBS ?=
 NVCC ?= nvcc
 NVCCFLAGS ?= -O3
 
-BENCHES := bench_exp bench_expq bench_expf bench_cuda_expf bench_cuda_exp bench_cuda_expq bench_expf_mpfr bench_exp_mpfr64 bench_exp_mpfr bench_softfloat32 bench_softfloat64 bench_softfloat128 bench_intelm
+CORE_MATH_DIR := core-math
+CORE_MATH_CFLAGS ?= -fno-finite-math-only -frounding-math
+CORE_MATH_EXPQ_CC ?= clang
+QUADMATH_GCC_INCLUDE ?= $(shell $(GCC_FOR_QUADMATH) -print-file-name=include 2>/dev/null)
+CORE_MATH_EXPQ_QUADMATH_INCFLAG := $(if $(QUADMATH_GCC_INCLUDE),-idirafter $(QUADMATH_GCC_INCLUDE),)
+CORE_MATH_EXPQ_CFLAGS ?= $(CFLAGS) $(CORE_MATH_CFLAGS) $(CORE_MATH_EXPQ_QUADMATH_INCFLAG)
+CORE_MATH_EXP_SRC := $(CORE_MATH_DIR)/src/binary64/exp/exp.c
+CORE_MATH_EXPF_SRC := $(CORE_MATH_DIR)/src/binary32/exp/expf.c
+CORE_MATH_EXPQ_SRC := $(CORE_MATH_DIR)/src/binary128/exp/expq.c
+
+BENCHES := bench_exp bench_coremath_exp bench_expq bench_coremath_expq bench_expf bench_coremath_expf bench_cuda_expf bench_cuda_exp bench_cuda_expq bench_expf_mpfr bench_exp_mpfr64 bench_exp_mpfr bench_softfloat32 bench_softfloat64 bench_softfloat128 bench_intelm
 BINARIES := $(addprefix $(BIN_DIR)/,$(BENCHES))
 RUN_TARGETS := $(addprefix run-,$(BENCHES))
 
@@ -38,6 +49,9 @@ help:
 >echo "Optional overrides:"
 >echo "  CC=clang"
 >echo "  CFLAGS='-O2 -march=native'"
+>echo "  CORE_MATH_CFLAGS='-fno-finite-math-only -frounding-math'"
+>echo "  CORE_MATH_EXPQ_CC=clang"
+>echo "  GCC_FOR_QUADMATH=gcc"
 >echo "  ONEAPI_SETVARS=/opt/intel/oneapi/setvars.sh"
 >echo "  MKL_CC=icx"
 >echo "  MKL_CFLAGS='-I/path/to/mkl/include'"
@@ -101,11 +115,20 @@ endef
 $(BIN_DIR)/bench_exp: bench_exp.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) bench_exp.c -o $(BIN_DIR)/bench_exp -lm,bench_exp)
 
+$(BIN_DIR)/bench_coremath_exp: bench_coremath_exp.c $(CORE_MATH_EXP_SRC)
+>$(call TRY_BUILD,$(CC) $(CFLAGS) $(CORE_MATH_CFLAGS) bench_coremath_exp.c $(CORE_MATH_EXP_SRC) -o $(BIN_DIR)/bench_coremath_exp -lm,bench_coremath_exp)
+
 $(BIN_DIR)/bench_expf: bench_expf.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) bench_expf.c -o $(BIN_DIR)/bench_expf -lm,bench_expf)
 
+$(BIN_DIR)/bench_coremath_expf: bench_coremath_expf.c $(CORE_MATH_EXPF_SRC)
+>$(call TRY_BUILD,$(CC) $(CFLAGS) $(CORE_MATH_CFLAGS) bench_coremath_expf.c $(CORE_MATH_EXPF_SRC) -o $(BIN_DIR)/bench_coremath_expf -lm,bench_coremath_expf)
+
 $(BIN_DIR)/bench_expq: bench_expq.c
 >$(call TRY_BUILD,$(CC) $(CFLAGS) bench_expq.c -o $(BIN_DIR)/bench_expq -lquadmath,bench_expq)
+
+$(BIN_DIR)/bench_coremath_expq: bench_coremath_expq.c $(CORE_MATH_EXPQ_SRC)
+>$(call TRY_BUILD,$(CORE_MATH_EXPQ_CC) $(CORE_MATH_EXPQ_CFLAGS) bench_coremath_expq.c $(CORE_MATH_EXPQ_SRC) -o $(BIN_DIR)/bench_coremath_expq -lquadmath -lm,bench_coremath_expq)
 
 $(BIN_DIR)/bench_cuda_expf: bench_cuda_expf.cu
 >$(call TRY_BUILD,$(NVCC) $(NVCCFLAGS) bench_cuda_expf.cu -o $(BIN_DIR)/bench_cuda_expf,bench_cuda_expf)
@@ -162,11 +185,20 @@ run: all $(RUN_TARGETS)
 run-bench_exp:
 >$(call TRY_RUN,bench_exp)
 
+run-bench_coremath_exp:
+>$(call TRY_RUN,bench_coremath_exp)
+
 run-bench_expf:
 >$(call TRY_RUN,bench_expf)
 
+run-bench_coremath_expf:
+>$(call TRY_RUN,bench_coremath_expf)
+
 run-bench_expq:
 >$(call TRY_RUN,bench_expq)
+
+run-bench_coremath_expq:
+>$(call TRY_RUN,bench_coremath_expq)
 
 run-bench_cuda_expf:
 >$(call TRY_RUN,bench_cuda_expf)
