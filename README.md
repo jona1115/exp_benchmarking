@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1210012709.svg)](https://doi.org/10.5281/zenodo.20058929)
+
 # exp_benchmarking
 
 ## How to run?
